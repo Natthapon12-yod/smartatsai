@@ -1,3 +1,4 @@
+import os
 import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
@@ -100,4 +101,5 @@ if __name__ == '__main__':
     print("--- น้องไฟดี (Groq Speed) กำลังออนไลน์บน Telegram แล้วครับ! ---")
 
     application.run_polling()
+
 
