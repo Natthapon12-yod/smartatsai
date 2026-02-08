@@ -10,19 +10,17 @@ from groq import Groq
 # --- 1. ส่วนหลอกระบบ Health Check ของ Koyeb (Port 8000) ---
 def run_health_check_server():
     handler = http.server.SimpleHTTPRequestHandler
-    # อนุญาตให้ใช้พอร์ตซ้ำได้เพื่อป้องกัน Error ตอน Restart
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", 8000), handler) as httpd:
         httpd.serve_forever()
 
-# --- 2. ตั้งค่า Token และ API Key (ดึงจาก Environment Variables) ---
+# --- 2. ดึงค่าจาก Environment Variables ที่ตั้งไว้ใน Koyeb ---
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 client = Groq(api_key=GROQ_API_KEY)
 
 # --- 3. ตั้งค่าระบบและบทบาทของน้องไฟดี ---
 user_conversations = {}
-
 SYSTEM_PROMPT = """
 บทบาทและตัวตน:
 คุณคือ 'น้องไฟดี' วิศวกร AI อัจฉริยะ ผู้เชี่ยวชาญด้านพลังงานประจำระบบ Smart ATS มีบุคลิกสุภาพ เป็นกันเอง และให้ข้อมูลที่แม่นยำ 100% ตามประกาศของ กฟภ. (PEA)
@@ -54,44 +52,33 @@ SYSTEM_PROMPT = """
 * แสดงรายละเอียดการคำนวณ (ค่าฐาน, Ft, VAT) และยอดรวมสุทธิ
 """
 
-# --- 4. ฟังก์ชันจัดการข้อความ ---
+# --- 4. ฟังก์ชันจัดการข้อความ (ต้องนิยามก่อนสั่งใช้งาน) ---
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_text = update.message.text
-    
     if user_id not in user_conversations:
         user_conversations[user_id] = [{"role": "system", "content": SYSTEM_PROMPT}]
-    
     try:
         user_conversations[user_id].append({"role": "user", "content": user_text})
-        
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=user_conversations[user_id],
             temperature=0.5,
-            max_tokens=1024,
         )
-        
         response_text = completion.choices[0].message.content
         user_conversations[user_id].append({"role": "assistant", "content": response_text})
-        
-        # รักษาประวัติ 10 ข้อความล่าสุด
-        if len(user_conversations[user_id]) > 11:
-            user_conversations[user_id] = [user_conversations[user_id][0]] + user_conversations[user_id][-10:]
-            
         await update.message.reply_text(response_text)
-        
     except Exception as e:
         await update.message.reply_text(f"ขออภัยครับคุณพี่ น้องไฟดีขัดข้องนิดหน่อย: {e}")
 
-# --- 5. ส่วนหลักที่สั่งรันโปรแกรม ---
+# --- 5. ส่วนหลักที่สั่งรันโปรแกรม (Main) ---
 if __name__ == '__main__':
-    # รันเซิร์ฟเวอร์หลอก Port 8000 ไว้เบื้องหลัง (Thread)
+    # รันเซิร์ฟเวอร์หลอก Port 8000 ไว้เบื้องหลัง
     threading.Thread(target=run_health_check_server, daemon=True).start()
     
-    # สร้างและรัน Bot Telegram
+    # สร้าง application และระบุโทเค็น
     application = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
     
-    print("--- น้องไฟดี (Smart ATS) ออนไลน์บน Cloud เรียบร้อยครับคุณพี่! ---")
+    print("--- น้องไฟดี ออนไลน์บน Cloud เรียบร้อยครับคุณพี่! ---")
     application.run_polling()
