@@ -4,8 +4,8 @@ from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filte
 from groq import Groq
 
 # --- ตั้งค่า Token และ API Key ---
-TELEGRAM_TOKEN = '8373253714:AAHW04WkBbdFemQnOD_GJ1lD7sRMlKAaris'
-GROQ_API_KEY = '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'
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 
 # --- ตั้งค่า Groq ---
 client = Groq(api_key=GROQ_API_KEY)
@@ -83,4 +83,5 @@ if __name__ == '__main__':
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
     
     print("--- น้องไฟดี (Groq Speed) กำลังออนไลน์บน Telegram แล้วครับ! ---")
+
     application.run_polling()
