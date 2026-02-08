@@ -2,6 +2,9 @@ import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
 from groq import Groq
+import http.server
+import socketserver
+import threading
 
 # --- ตั้งค่า Token และ API Key ---
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -9,6 +12,18 @@ GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 
 # --- ตั้งค่า Groq ---
 client = Groq(api_key=GROQ_API_KEY)
+
+# ฟังก์ชันสำหรับเปิด Port หลอกระบบ Health Check
+def run_health_check_server():
+    handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", 8000), handler) as httpd:
+        httpd.serve_forever()
+
+# แทรกคำสั่งนี้ก่อนบรรทัด application.run_polling()
+if __name__ == '__main__':
+    threading.Thread(target=run_health_check_server, daemon=True).start()
+    # ... โค้ดส่วนรันบอทเดิมของคุณพี่ ...
+    application.run_polling()
 
 # เก็บประวัติแยกตาม User ID เพื่อไม่ให้ข้อมูลปนกัน
 user_conversations = {}
@@ -85,3 +100,4 @@ if __name__ == '__main__':
     print("--- น้องไฟดี (Groq Speed) กำลังออนไลน์บน Telegram แล้วครับ! ---")
 
     application.run_polling()
+
