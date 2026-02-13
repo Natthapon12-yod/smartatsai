@@ -52,6 +52,9 @@ CALCULATION STEPS (Keep 4 decimals throughout):
 - Step 3: VAT 7% = (Base Charge + Ft Charge) * 0.0700.
 - Step 4: Total Net = Base Charge + Ft Charge + VAT.
 
+SPECIAL COMMANDS:
+- ENERGY DATA REQUEST: หากผู้ใช้ถามว่า "ขอดูข้อมูลพลังงาน" หรือต้องการดูข้อมูลการใช้ไฟ ให้ส่งลิงก์นี้ทันที: https://docs.google.com/spreadsheets/d/1dqgiW-Xy7QeSiil-fK79k9OuuLfwUA3jKeI2WWKxbS8/edit?usp=sharing
+
 RESPONSE FORMAT (THAI):
 - Show step-by-step calculation clearly in Thai using 4 decimal places for clarity.
 - Round the FINAL Total Net to 2 decimal places for the user.
@@ -111,6 +114,7 @@ if __name__ == '__main__':
         
     except Conflict:
         print("❌ เกิดข้อผิดพลาด: บอทรันซ้อนกัน! กรุณาปิดบอทที่รันอยู่ในคอมพิวเตอร์ก่อนครับ")
+
 
 
 
